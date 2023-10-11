@@ -1,15 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 
 const GoogleMapComponent = () => {
   const mapRef = useRef(null);
   let map;
+  const [currentMarker, setCurrentMarker] = useState(null);
 
   const addMarker = (location) => {
-    new window.google.maps.Marker({
+    const marker = new window.google.maps.Marker({
       position: location,
       map: map,
     });
+    setCurrentMarker(marker);
   };
 
   useEffect(() => {
@@ -24,18 +26,33 @@ const GoogleMapComponent = () => {
         zoom: 12,
       });
 
-      // 註冊地圖點擊事件
       map.addListener('click', (event) => {
         addMarker({ lat: event.latLng.lat(), lng: event.latLng.lng() });
       });
     });
   }, []);
 
-  return <div ref={mapRef} style={{ height: '100vh', width: '100%' }} />;
+  return (
+    <div>
+      <div ref={mapRef} style={{ height: '80vh', width: '100%' }} />
+      {currentMarker && (
+        <div>
+          <h3>新增地點</h3>
+          <form>
+            <label>
+              名稱:
+              <input type="text" name="name" />
+            </label>
+            <label>
+              描述:
+              <input type="text" name="description" />
+            </label>
+            <input type="submit" value="完成" />
+          </form>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default GoogleMapComponent;
-
-
-
-
