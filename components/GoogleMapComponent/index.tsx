@@ -95,7 +95,7 @@ const GoogleMapComponent = () => {
         <button disabled>新增路線</button>
       )}
       <div ref={mapRef} style={{ height: '80vh', width: '100%' }} />
-      {currentStep < 3 && isDrawingMode && (
+      {isDrawingMode && (
         <div>
           {Array.from({ length: currentStep }, (_, index) => (
             <div key={index}>
@@ -130,27 +130,27 @@ const GoogleMapComponent = () => {
               <button onClick={handleCancel}>取消</button>
             </div>
           ))}
-        </div>
-      )}
-      {currentStep === 3 && (
-        <div>
-          <h3>請輸入路線資訊</h3>
-          <input
-            type="text"
-            placeholder="輸入路線名稱"
-            required
-            value={routeName}
-            onChange={(e) => setRouteName(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="輸入路線描述"
-            value={routeDescription}
-            onChange={(e) => setRouteDescription(e.target.value)}
-          />
-          <input type="file" />
-          <button onClick={handleCancel}>取消路線</button>
-          <button onClick={() => console.log('送出路線')}>送出路線</button>
+          {currentStep === 3 && (
+            <div>
+              <h3>請輸入路線資訊</h3>
+              <input
+                type="text"
+                placeholder="輸入路線名稱"
+                required
+                value={routeName}
+                onChange={(e) => setRouteName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="輸入路線描述"
+                value={routeDescription}
+                onChange={(e) => setRouteDescription(e.target.value)}
+              />
+              <input type="file" />
+              <button onClick={handleCancel}>取消路線</button>
+              <button onClick={() => console.log('送出路線')}>送出路線</button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -158,6 +158,3 @@ const GoogleMapComponent = () => {
 };
 
 export default GoogleMapComponent;
-
-
-
