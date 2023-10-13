@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 
 const GoogleMapComponent = () => {
@@ -7,9 +7,9 @@ const GoogleMapComponent = () => {
   const [markers, setMarkers] = useState([]);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [locations, setLocations] = useState([]);
-  const [line, setLine] = useState(null);
+  const [line, setLine] = useState(null);  // 用於儲存 Polyline 物件
 
-  // 初始化 Google 地圖
+  // 初始化地圖
   useEffect(() => {
     const loader = new Loader({
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -24,7 +24,7 @@ const GoogleMapComponent = () => {
     });
   }, []);
 
-  // 添加地圖上的標記
+  // 添加標記的函數
   const addMarker = (event) => {
     if (!isDrawingMode || markers.length >= 3) return;
 
@@ -42,28 +42,32 @@ const GoogleMapComponent = () => {
       return updatedMarkers;
     });
 
-    setIsDrawingMode(false);
+    if (markers.length === 2) {
+      setIsDrawingMode(false);
+    }
   };
 
-  // 在標記之間畫線
+  // 畫線的函數
   const drawLine = (markerArray) => {
     if (line) {
-      line.setMap(null);
+      line.setMap(null);  // 移除舊的線
     }
+
     const newLine = new window.google.maps.Polyline({
       path: markerArray.map(marker => marker.getPosition()),
       geodesic: true,
       strokeColor: '#FF0000',
       strokeOpacity: 1.0,
-      strokeWeight: 2,
+      strokeWeight: 5,
     });
+
     newLine.setMap(map);
     setLine(newLine);
   };
 
-  // 處理「完成」按鈕的點擊事件
+  // 處理地點和路線的完成
   const handleFinish = () => {
-    // 在這裡將 locations 儲存到資料庫
+    // 這裡，您可以將 locations 保存到資料庫，例如使用 Prisma
     console.log("Locations saved:", locations);
     setIsDrawingMode(false);
     setMarkers([]);
@@ -71,12 +75,14 @@ const GoogleMapComponent = () => {
       line.setMap(null);
     }
     setLine(null);
-    setLocations([]);
   };
 
   useEffect(() => {
     if (map) {
-      map.addListener('click', addMarker);
+      const clickListener = map.addListener('click', addMarker);
+      return () => {
+        window.google.maps.event.removeListener(clickListener);
+      };
     }
   }, [map, isDrawingMode, markers]);
 
