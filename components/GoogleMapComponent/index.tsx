@@ -5,11 +5,11 @@ const GoogleMapComponent = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [locations, setLocations] = useState([]);
-  const [line, setLine] = useState(null);  // 用於儲存 Polyline 物件
+  const [locations, setLocations] = useState(Array(3).fill({ name: '', description: '' }));
+  const [routeName, setRouteName] = useState('');
+  const [routeDescription, setRouteDescription] = useState('');
+  const [line, setLine] = useState(null);
 
-  // 初始化地圖
   useEffect(() => {
     const loader = new Loader({
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -24,91 +24,110 @@ const GoogleMapComponent = () => {
     });
   }, []);
 
-  // 添加標記的函數
   const addMarker = (event) => {
-    if (!isDrawingMode || markers.length >= 3) return;
-
     const newPoint = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     const marker = new window.google.maps.Marker({
       position: newPoint,
       map: map,
     });
 
-    setMarkers(prevMarkers => {
-      const updatedMarkers = [...prevMarkers, marker];
-      if (updatedMarkers.length >= 2) {
-        drawLine(updatedMarkers);
-      }
-      return updatedMarkers;
-    });
+    setMarkers((prevMarkers) => [...prevMarkers, marker]);
 
-    if (markers.length === 2) {
-      setIsDrawingMode(false);
+    if (prevMarkers.length >= 1) {
+      drawLine([...prevMarkers, marker]);
     }
   };
 
-  // 畫線的函數
   const drawLine = (markerArray) => {
     if (line) {
-      line.setMap(null);  // 移除舊的線
+      line.setMap(null);
     }
 
     const newLine = new window.google.maps.Polyline({
-      path: markerArray.map(marker => marker.getPosition()),
+      path: markerArray.map((marker) => marker.getPosition()),
       geodesic: true,
       strokeColor: '#FF0000',
       strokeOpacity: 1.0,
-      strokeWeight: 5,
+      strokeWeight: 2,
     });
 
     newLine.setMap(map);
     setLine(newLine);
   };
 
-  // 處理地點和路線的完成
-  const handleFinish = () => {
-    // 這裡，您可以將 locations 保存到資料庫，例如使用 Prisma
-    console.log("Locations saved:", locations);
-    setIsDrawingMode(false);
-    setMarkers([]);
+  const handleCancel = () => {
+    markers.forEach((marker) => marker.setMap(null));
     if (line) {
       line.setMap(null);
     }
-    setLine(null);
+    setMarkers([]);
+    setLocations(Array(3).fill({ name: '', description: '' }));
+    setRouteName('');
+    setRouteDescription('');
   };
 
   useEffect(() => {
-    if (map) {
-      const clickListener = map.addListener('click', addMarker);
-      return () => {
-        window.google.maps.event.removeListener(clickListener);
-      };
+    if (map && markers.length < 3) {
+      map.addListener('click', addMarker);
     }
-  }, [map, isDrawingMode, markers]);
+    return () => {
+      if (map) {
+        window.google.maps.event.clearListeners(map, 'click');
+      }
+    };
+  }, [map, markers]);
 
   return (
     <div>
-      <button onClick={() => setIsDrawingMode(true)}>新增路線</button>
       <div ref={mapRef} style={{ height: '80vh', width: '100%' }} />
-      {markers.length === 3 && (
+      {markers.length < 3 && (
         <div>
-          <h3>請輸入地點和路線資訊</h3>
-          {Array.from({ length: 3 }, (_, index) => (
+          {Array.from({ length: markers.length }, (_, index) => (
             <div key={index}>
               <h4>{`地點 ${index + 1}`}</h4>
-              <input type="text" placeholder="輸入地點名稱" onChange={(e) => {
-                const newLocations = [...locations];
-                newLocations[index] = { ...newLocations[index], name: e.target.value };
-                setLocations(newLocations);
-              }} />
-              <input type="text" placeholder="輸入地點描述" onChange={(e) => {
-                const newLocations = [...locations];
-                newLocations[index] = { ...newLocations[index], description: e.target.value };
-                setLocations(newLocations);
-              }} />
+              <input
+                type="text"
+                placeholder="輸入地點名稱"
+                required
+                value={locations[index].name}
+                onChange={(e) => {
+                  const newLocations = [...locations];
+                  newLocations[index].name = e.target.value;
+                  setLocations(newLocations);
+                }}
+              />
+              <input
+                type="text"
+                placeholder="輸入地點描述"
+                value={locations[index].description}
+                onChange={(e) => {
+                  const newLocations = [...locations];
+                  newLocations[index].description = e.target.value;
+                  setLocations(newLocations);
+                }}
+              />
             </div>
           ))}
-          <button onClick={handleFinish}>路線完成</button>
+        </div>
+      )}
+      {markers.length === 3 && (
+        <div>
+          <h3>請輸入路線資訊</h3>
+          <input
+            type="text"
+            placeholder="輸入路線名稱"
+            required
+            value={routeName}
+            onChange={(e) => setRouteName(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="輸入路線描述"
+            value={routeDescription}
+            onChange={(e) => setRouteDescription(e.target.value)}
+          />
+          <input type="file" />
+          <button onClick={handleCancel}>取消路線</button>
         </div>
       )}
     </div>
