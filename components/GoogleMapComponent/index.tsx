@@ -6,9 +6,11 @@ const GoogleMapComponent = () => {
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [locations, setLocations] = useState(Array(3).fill({ name: '', description: '' }));
+  const [currentStep, setCurrentStep] = useState(0);
   const [routeName, setRouteName] = useState('');
   const [routeDescription, setRouteDescription] = useState('');
   const [line, setLine] = useState(null);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
 
   useEffect(() => {
     const loader = new Loader({
@@ -25,17 +27,23 @@ const GoogleMapComponent = () => {
   }, []);
 
   const addMarker = (event) => {
+    if (currentStep >= 3) return;
+
     const newPoint = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     const marker = new window.google.maps.Marker({
       position: newPoint,
-      map: map,
+      map,
     });
 
-    setMarkers((prevMarkers) => [...prevMarkers, marker]);
+    setMarkers((prevMarkers) => {
+      const updatedMarkers = [...prevMarkers, marker];
+      if (updatedMarkers.length >= 2) {
+        drawLine(updatedMarkers);
+      }
+      return updatedMarkers;
+    });
 
-    if (prevMarkers.length >= 1) {
-      drawLine([...prevMarkers, marker]);
-    }
+    setCurrentStep((prevStep) => prevStep + 1);
   };
 
   const drawLine = (markerArray) => {
@@ -64,10 +72,12 @@ const GoogleMapComponent = () => {
     setLocations(Array(3).fill({ name: '', description: '' }));
     setRouteName('');
     setRouteDescription('');
+    setCurrentStep(0);
+    setIsDrawingMode(false);
   };
 
   useEffect(() => {
-    if (map && markers.length < 3) {
+    if (map && isDrawingMode && currentStep < 3) {
       map.addListener('click', addMarker);
     }
     return () => {
@@ -75,14 +85,19 @@ const GoogleMapComponent = () => {
         window.google.maps.event.clearListeners(map, 'click');
       }
     };
-  }, [map, markers]);
+  }, [map, currentStep, isDrawingMode]);
 
   return (
     <div>
+      {currentStep < 3 ? (
+        <button onClick={() => setIsDrawingMode(true)}>新增路線</button>
+      ) : (
+        <button disabled>新增路線</button>
+      )}
       <div ref={mapRef} style={{ height: '80vh', width: '100%' }} />
-      {markers.length < 3 && (
+      {currentStep < 3 && isDrawingMode && (
         <div>
-          {Array.from({ length: markers.length }, (_, index) => (
+          {Array.from({ length: currentStep }, (_, index) => (
             <div key={index}>
               <h4>{`地點 ${index + 1}`}</h4>
               <input
@@ -106,11 +121,18 @@ const GoogleMapComponent = () => {
                   setLocations(newLocations);
                 }}
               />
+              <button
+                disabled={!locations[index].name}
+                onClick={() => setIsDrawingMode(true)}
+              >
+                完成
+              </button>
+              <button onClick={handleCancel}>取消</button>
             </div>
           ))}
         </div>
       )}
-      {markers.length === 3 && (
+      {currentStep === 3 && (
         <div>
           <h3>請輸入路線資訊</h3>
           <input
@@ -128,6 +150,7 @@ const GoogleMapComponent = () => {
           />
           <input type="file" />
           <button onClick={handleCancel}>取消路線</button>
+          <button onClick={() => console.log('送出路線')}>送出路線</button>
         </div>
       )}
     </div>
@@ -135,3 +158,5 @@ const GoogleMapComponent = () => {
 };
 
 export default GoogleMapComponent;
+
+
