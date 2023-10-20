@@ -88,71 +88,75 @@ const GoogleMapComponent = () => {
   }, [map, currentStep, isDrawingMode]);
 
   return (
-    <div>
-      {currentStep < 3 ? (
-        <button onClick={() => setIsDrawingMode(true)}>新增路線</button>
-      ) : (
-        <button disabled>新增路線</button>
-      )}
-      <div ref={mapRef} style={{ height: '80vh', width: '100%' }} />
-      {isDrawingMode && (
-        <div>
-          {Array.from({ length: currentStep }, (_, index) => (
-            <div key={index}>
-              <h4>{`地點 ${index + 1}`}</h4>
-              <input
-                type="text"
-                placeholder="輸入地點名稱"
-                required
-                value={locations[index].name}
-                onChange={(e) => {
-                  const newLocations = [...locations];
-                  newLocations[index].name = e.target.value;
-                  setLocations(newLocations);
-                }}
-              />
-              <input
-                type="text"
-                placeholder="輸入地點描述"
-                value={locations[index].description}
-                onChange={(e) => {
-                  const newLocations = [...locations];
-                  newLocations[index].description = e.target.value;
-                  setLocations(newLocations);
-                }}
-              />
-              <button
-                disabled={!locations[index].name}
-                onClick={() => setIsDrawingMode(true)}
-              >
-                完成
-              </button>
-              <button onClick={handleCancel}>取消</button>
-            </div>
-          ))}
-          {currentStep === 3 && (
-            <div>
-              <h3>請輸入路線資訊</h3>
-              <input
-                type="text"
-                placeholder="輸入路線名稱"
-                required
-                value={routeName}
-                onChange={(e) => setRouteName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="輸入路線描述"
-                value={routeDescription}
-                onChange={(e) => setRouteDescription(e.target.value)}
-              />
-              <input type="file" />
-              <button onClick={handleCancel}>取消路線</button>
-              <button onClick={() => console.log('送出路線')}>送出路線</button>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="flex">
+      <div ref={mapRef} className="w-1/2 h-screen" />
+      <div className="w-1/2 h-screen overflow-auto p-4">
+        {currentStep < 3 ? (
+               <button className="w-32 border border-gray-400 p-2" onClick={() => setIsDrawingMode(true)}>新增路線</button>
+        ) : (
+          <button className="w-32 border border-gray-400 p-2" disabled>新增路線</button>
+        )}
+        {isDrawingMode && (
+          <div>
+            {Array.from({ length: currentStep }, (_, index) => (
+              <div key={index}>
+                <h4>{`地點 ${index + 1}`}</h4>
+                <input
+                  type="text"
+                  placeholder="輸入地點名稱"
+                  required
+                  value={locations[index].name}
+                  onChange={(e) => {
+                    const newLocations = [...locations];
+                    newLocations[index].name = e.target.value;
+                    setLocations(newLocations);
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="輸入地點描述"
+                  value={locations[index].description}
+                  onChange={(e) => {
+                    const newLocations = [...locations];
+                    newLocations[index].description = e.target.value;
+                    setLocations(newLocations);
+                  }}
+                />
+                <button
+                  className="w-32 border border-gray-400 p-2"
+                  disabled={!locations[index].name}
+                  onClick={() => setIsDrawingMode(true)}
+                >
+                  完成
+                </button>
+                <button className="w-32 border border-gray-400 p-2"
+                        onClick={handleCancel}>取消</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {currentStep === 3 && (
+          <div>
+            <h3>請輸入路線資訊</h3>
+            <input
+              type="text"
+              placeholder="輸入路線名稱"
+              required
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="輸入路線描述"
+              value={routeDescription}
+              onChange={(e) => setRouteDescription(e.target.value)}
+            />
+            <input type="file" />
+            <button className="w-32 border border-gray-400 p-2" onClick={handleCancel}>取消路線</button>
+            <button className="w-32 border border-gray-400 p-2" onClick={() => console.log('送出路線')}>送出路線</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
